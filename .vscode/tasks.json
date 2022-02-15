@@ -10,7 +10,10 @@
 				"/consoleloggerparameters:NoSummary"
 			],
 			"type": "process",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/CreateRating"
+			}
 		},
 		{
 			"label": "build (functions)",
@@ -26,7 +29,10 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/CreateRating"
+			}
 		},
 		{
 			"label": "clean release (functions)",
@@ -39,7 +45,10 @@
 				"/consoleloggerparameters:NoSummary"
 			],
 			"type": "process",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/CreateRating"
+			}
 		},
 		{
 			"label": "publish (functions)",
@@ -53,15 +62,19 @@
 			],
 			"type": "process",
 			"dependsOn": "clean release (functions)",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/CreateRating"
+			}
 		},
 		{
-			"type": "func",
+			"label": "func",
+			"type": "shell",
 			"dependsOn": "build (functions)",
 			"options": {
-				"cwd": "${workspaceFolder}/bin/Debug/netcoreapp3.1"
+				"cwd": "${workspaceFolder}/src/CreateRating/bin/Debug/netcoreapp3.1"
 			},
-			"command": "host start",
+			"command": "func host start",
 			"isBackground": true,
 			"problemMatcher": "$func-dotnet-watch"
 		}
