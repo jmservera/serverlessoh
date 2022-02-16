@@ -18,7 +18,7 @@ namespace Team5_OH.Function
                 databaseName: "ratings", 
                 collectionName: "ratingscollection", 
                 ConnectionStringSetting = "CosmosDbConnectionString",
-                SqlQuery = "SELECT * FROM c WHERE c.Id={ratingId}")] IEnumerable<RatingInfo> rating,
+                SqlQuery = "SELECT * FROM c WHERE c.id={ratingId}")] IEnumerable<RatingInfo> rating,
             ILogger log)
         {            
             if(rating==null || rating.Count()==0)
