@@ -4,5 +4,9 @@
     "azureFunctions.projectRuntime": "~3",
     "debug.internalConsoleOptions": "neverOpen",
     "azureFunctions.preDeployTask": "publish (functions)",
-    "azureFunctions.projectSubpath": "src\\CreateRating"
+    "azureFunctions.projectSubpath": "src\\CreateRating",
+    "azureLogicAppsStandard.deploySubpath": "src\\logicapp",
+    "azureLogicAppsStandard.projectLanguage": "JavaScript",
+    "azureLogicAppsStandard.projectRuntime": "~3",
+    "azureFunctions.suppressProject": true
 }

@@ -1,0 +1,32 @@
+{
+  "managedApiConnections": {
+    "commondataservice": {
+      "api": {
+        "id": "/subscriptions/267ee942-931b-4197-a65c-a232b17acc11/providers/Microsoft.Web/locations/ukwest/managedApis/commondataservice"
+      },
+      "connection": {
+        "id": "/subscriptions/267ee942-931b-4197-a65c-a232b17acc11/resourceGroups/OpenHackRG/providers/Microsoft.Web/connections/commondataservice"
+      },
+      "connectionRuntimeUrl": "https://b36dc358a8c3a54b.13.common.logic-ukwest.azure-apihub.net/apim/commondataservice/d70cd945da42456087acec44a6c770fc/",
+      "authentication": {
+        "type": "Raw",
+        "scheme": "Key",
+        "parameter": "@appsetting('commondataservice-connectionKey')"
+      }
+    },
+    "office365": {
+      "api": {
+        "id": "/subscriptions/267ee942-931b-4197-a65c-a232b17acc11/providers/Microsoft.Web/locations/ukwest/managedApis/office365"
+      },
+      "connection": {
+        "id": "/subscriptions/267ee942-931b-4197-a65c-a232b17acc11/resourceGroups/OpenHackRG/providers/Microsoft.Web/connections/office365"
+      },
+      "connectionRuntimeUrl": "https://b36dc358a8c3a54b.13.common.logic-ukwest.azure-apihub.net/apim/office365/0f3d663bc24a4278b60e3b02734027e0/",
+      "authentication": {
+        "type": "Raw",
+        "scheme": "Key",
+        "parameter": "@appsetting('office365-connectionKey')"
+      }
+    }
+  }
+}
