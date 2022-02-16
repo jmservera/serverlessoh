@@ -92,7 +92,8 @@ namespace Team5_OH.Function
                     return new OkObjectResult(responseMessage);
                 }
                 else{
-                    throw new ArgumentException();
+                    throw new ArgumentException("Bad Request");
+                
                 }
             }
             return new OkObjectResult(responseMessage);
