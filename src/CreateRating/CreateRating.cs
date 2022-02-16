@@ -32,7 +32,7 @@ namespace Team5_OH.Function
             {
                 using (var client = new HttpClient())
                 {
-                    client.BaseAddress = new Uri("https://serverlessohproduct.trafficmanager.net");
+                    client.BaseAddress = new Uri("https://serverlessohapi.azurewebsites.net");
                     var result = await client.GetAsync($"/api/GetProduct?productId={rating.ProductId}");
                     string resultBody = await result.Content.ReadAsStringAsync();
                     Product product = JsonConvert.DeserializeObject<Product>(resultBody);
@@ -47,7 +47,7 @@ namespace Team5_OH.Function
             {
                 using (var client = new HttpClient())
                 {
-                    client.BaseAddress = new Uri("https://serverlessohproduct.trafficmanager.net");
+                    client.BaseAddress = new Uri("https://serverlessohapi.azurewebsites.net");
                     var result = await client.GetAsync($"/api/GetUser?userId={rating.UserId}");
                     string resultBody = await result.Content.ReadAsStringAsync();
                     User user = JsonConvert.DeserializeObject<User>(resultBody);
