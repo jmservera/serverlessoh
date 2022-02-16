@@ -42,26 +42,37 @@ namespace Team5_OH.Function
             locationName = locationName ?? data?.locationName;
             rating = data?.rating;
             userNotes = userNotes ?? data?.userNotes;
+            
             var queryGetProduct = new Dictionary<string, string>()
             {
                 ["productId"] = productId
             };
+            
             var uriGetProduct = QueryHelpers.AddQueryString("https://serverlessohapi.azurewebsites.net/api/GetProduct", queryGetProduct);
             HttpResponseMessage responseGetproduct = await client.GetAsync(uriGetProduct);
             if (responseGetproduct.IsSuccessStatusCode)
             {
                 productCheckStatusCode = responseGetproduct.StatusCode.ToString();
             }
+            else{
+                return new NotFoundObjectResult( $"Product cannot be found {productId}");
+            }
+
             var queryGetUser = new Dictionary<string, string>()
             {
                 ["userId"] = userId
             };
+           
             var uriGetUser = QueryHelpers.AddQueryString("https://serverlessohapi.azurewebsites.net/api/GetUser", queryGetUser);
             HttpResponseMessage responseGetUser = await client.GetAsync(uriGetUser);
             if (responseGetUser.IsSuccessStatusCode)
             {
                 userCheckStatusCode = responseGetUser.StatusCode.ToString();
             }
+            else{
+                return new NotFoundObjectResult( $"User cannot be found {userId}");
+            }
+
             if(responseGetproduct.IsSuccessStatusCode && responseGetUser.IsSuccessStatusCode){
                 if(rating >= 0 && rating <= 5){
                     // Add a JSON document to the output container.
@@ -76,15 +87,14 @@ namespace Team5_OH.Function
                         rating = rating,
                         userNotes = userNotes
                     });
-                    responseMessage = $"Rating is successfully created!";  
+                    responseMessage = $"Rating is successfully created!";
+
+                    return new OkObjectResult(responseMessage);
                 }
                 else{
-                    responseMessage = $"Rating cannot be created! Rating is not a valid number";
-                }
+                    throw new ArgumentException("Bad Request");
                 
-            }
-            else{
-                responseMessage = $"Rating cannot be created!";
+                }
             }
             return new OkObjectResult(responseMessage);
         }
