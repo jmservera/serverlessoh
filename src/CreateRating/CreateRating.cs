@@ -11,10 +11,11 @@ using System.Net;
 using System.Net.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Collections.Generic;
+
 namespace Team5_OH.Function
 {
-    public static class CreateRating
-    {
+    public static class CreateRating{
+    
         [FunctionName("CreateRating")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
@@ -24,9 +25,11 @@ namespace Team5_OH.Function
                 ConnectionStringSetting = "CosmosDbConnectionString")]IAsyncCollector<dynamic> documentsOut,
             ILogger log)
         {
+
             HttpClient client = new HttpClient();
             log.LogInformation("C# HTTP trigger function processed a request.");
             //string name = req.Query["name"];
+
             string userId = null;
             string productId = null;
             string locationName = null;
@@ -92,8 +95,7 @@ namespace Team5_OH.Function
                     return new OkObjectResult(responseMessage);
                 }
                 else{
-                    throw new ArgumentException("Bad Request");
-                
+                    throw new ArgumentException(String.Format("Bad Request"));
                 }
             }
             return new OkObjectResult(responseMessage);
