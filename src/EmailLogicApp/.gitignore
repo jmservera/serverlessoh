@@ -1,4 +1,4 @@
-
+.debug/
 # Azure Functions artifacts
 bin
 obj

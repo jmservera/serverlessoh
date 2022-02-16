@@ -83,36 +83,7 @@
                     "body": "@outputs('Compose_products_table_into_email')"
                 },
                 "runAfter": {
-                    "For_each_contact": [
-                        "Succeeded"
-                    ]
-                }
-            },
-            "For_each_contact": {
-                "type": "Foreach",
-                "foreach": "@body('List_rows')?['value']",
-                "actions": {
-                    "Send_an_email_(V2)": {
-                        "type": "ApiConnection",
-                        "inputs": {
-                            "host": {
-                                "connection": {
-                                    "referenceName": "office365"
-                                }
-                            },
-                            "method": "post",
-                            "body": {
-                                "To": "@{items('For_each_contact')}",
-                                "Subject": "Team 5",
-                                "Body": "<p>@{outputs('Compose_products_table_into_email')}</p>"
-                            },
-                            "path": "/v2/Mail"
-                        },
-                        "runAfter": {}
-                    }
-                },
-                "runAfter": {
-                    "List_rows": [
+                    "For_each_3": [
                         "Succeeded"
                     ]
                 }
@@ -122,6 +93,35 @@
                 "inputs": "<!DOCTYPE html>\n<html>\n<body style=\"background-color: whitesmoke; color: #454545; font-family:'Gill Sans',\n'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; padding-bottom: 3em;\">\n <table style=\"width:100%; color:#454545\">\n   <tr>\n     <td style=\"width:11em;\">\n       <img style=\"margin-left:1em;\"\n       src=\"https://serverlessoh.azureedge.net/public/ice-cream-2202561_320-circle.jpg\"\n         height=\"160\" width=\"160\" alt=\"Fruit Ice Cream\">\n     </td>\n     <td>\n       <p style=\"font-style: italic; font-size: 50px;\n       font-weight:600; margin-left: 1em;\">Best For You Organics</p>\n     </td>\n   </tr>\n </table>\n <p style=\"text-align: center; font-style: italic; font-size:\n 80px;\">New Ice Cream Line!</p>\n <p style=\"margin:2em 0em; font-size: 20px; text-align: center;\">\n Best For You Organics have a new line of fruit flavored ice creams.\n Below is the information so you can start the ordering process:\n </p>\n <table style=\"width:100%; border-top: 1px solid #454545;\n border-bottom: 1px solid #454545; color:#454545; padding: 1em; font-size: 20px;\">\n   <thead>\n     <tr>\n       <th style=\"padding-bottom: 1em;\" align=\"left\">Ice Cream</th>\n       <th style=\"padding-bottom: 1em;\" align=\"left\">Description</th>\n       <th style=\"padding-bottom: 1em;\" align=\"left\">Product ID</th>\n     </tr>\n   </thead>\n   <tbody style=\"font-size: 16px;\">\n@{body('Create_HTML_table')}\n   </tbody>\n </table>\n <p style=\"text-align: center; margin-top: 3em;font-size: 20px;\">Please contact\n your representative at Best For You Organics to get more information..</p>\n</body>\n</html>",
                 "runAfter": {
                     "Create_HTML_table": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "For_each_3": {
+                "type": "Foreach",
+                "foreach": "@body('List_rows')?['value']",
+                "actions": {
+                    "Send_an_email_(V2)_3": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "office365"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "To": "@items('For_each_3')?['emailaddress1']",
+                                "Subject": "team 5",
+                                "Body": "<p>@{outputs('Compose_products_table_into_email')}</p>"
+                            },
+                            "path": "/v2/Mail"
+                        },
+                        "runAfter": {}
+                    }
+                },
+                "runAfter": {
+                    "List_rows": [
                         "Succeeded"
                     ]
                 }
