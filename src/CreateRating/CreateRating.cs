@@ -22,83 +22,59 @@ namespace Team5_OH.Function
             [CosmosDB(
                 databaseName: "ratings", 
                 collectionName: "ratingscollection", 
-                ConnectionStringSetting = "CosmosDbConnectionString")]IAsyncCollector<dynamic> documentsOut,
+                ConnectionStringSetting = "CosmosDbConnectionString")]IAsyncCollector<RatingInfo> documentsOut,
             ILogger log)
         {
-
-            HttpClient client = new HttpClient();
-            log.LogInformation("C# HTTP trigger function processed a request.");
-            //string name = req.Query["name"];
-
-            string userId = null;
-            string productId = null;
-            string locationName = null;
-            int rating = 0;
-            string userNotes = null;
-            string productCheckStatusCode = null;
-            string userCheckStatusCode = null;
-            string responseMessage = null;
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            userId = userId ?? data?.userId;
-            productId = productId ?? data?.productId;
-            locationName = locationName ?? data?.locationName;
-            rating = data?.rating;
-            userNotes = userNotes ?? data?.userNotes;
-            
-            var queryGetProduct = new Dictionary<string, string>()
-            {
-                ["productId"] = productId
-            };
-            
-            var uriGetProduct = QueryHelpers.AddQueryString("https://serverlessohapi.azurewebsites.net/api/GetProduct", queryGetProduct);
-            HttpResponseMessage responseGetproduct = await client.GetAsync(uriGetProduct);
-            if (responseGetproduct.IsSuccessStatusCode)
-            {
-                productCheckStatusCode = responseGetproduct.StatusCode.ToString();
-            }
-            else{
-                return new NotFoundObjectResult( $"Product cannot be found {productId}");
-            }
+            RatingInfo rating = JsonConvert.DeserializeObject<RatingInfo>(requestBody);
 
-            var queryGetUser = new Dictionary<string, string>()
+            try
             {
-                ["userId"] = userId
-            };
-           
-            var uriGetUser = QueryHelpers.AddQueryString("https://serverlessohapi.azurewebsites.net/api/GetUser", queryGetUser);
-            HttpResponseMessage responseGetUser = await client.GetAsync(uriGetUser);
-            if (responseGetUser.IsSuccessStatusCode)
-            {
-                userCheckStatusCode = responseGetUser.StatusCode.ToString();
-            }
-            else{
-                return new NotFoundObjectResult( $"User cannot be found {userId}");
-            }
-
-            if(responseGetproduct.IsSuccessStatusCode && responseGetUser.IsSuccessStatusCode){
-                if(rating >= 0 && rating <= 5){
-                    // Add a JSON document to the output container.
-                    await documentsOut.AddAsync(new
-                    {
-                        // create a random ID
-                        id = System.Guid.NewGuid().ToString(),
-                        userId = userId,
-                        productId = productId,
-                        timestamp = DateTime.UtcNow,
-                        locationName = locationName,
-                        rating = rating,
-                        userNotes = userNotes
-                    });
-                    responseMessage = $"Rating is successfully created!";
-
-                    return new OkObjectResult(responseMessage);
-                }
-                else{
-                    throw new ArgumentException(String.Format("Bad Request"));
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("https://serverlessohproduct.trafficmanager.net");
+                    var result = await client.GetAsync($"/api/GetProduct?productId={rating.ProductId}");
+                    string resultBody = await result.Content.ReadAsStringAsync();
+                    Product product = JsonConvert.DeserializeObject<Product>(resultBody);
                 }
             }
-            return new OkObjectResult(responseMessage);
+            catch (System.Exception ex)
+            {   
+                return new NotFoundObjectResult($"Could not find product with id: {rating.ProductId}");
+            }
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("https://serverlessohproduct.trafficmanager.net");
+                    var result = await client.GetAsync($"/api/GetUser?userId={rating.UserId}");
+                    string resultBody = await result.Content.ReadAsStringAsync();
+                    User user = JsonConvert.DeserializeObject<User>(resultBody);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                return new NotFoundObjectResult($"Could not find user with id: {rating.UserId}");
+
+            }
+
+             // Add a property called id with a GUID value
+            rating.Id = Guid.NewGuid().ToString();
+
+            // Add a property called timestamp with the current UTC date time
+            rating.Timestamp = DateTime.UtcNow;
+
+            // Validate that the rating field is an integer from 0 to 5
+            if (rating.Rating < 0 || rating.Rating > 5)
+            {
+                return new BadRequestObjectResult($"Rating must be between 0 and 5");
+            }
+
+            // Use a data service to store the ratings information to the backend
+            await documentsOut.AddAsync(rating);
+
+            return new OkObjectResult(rating);
         }
     }
 }
