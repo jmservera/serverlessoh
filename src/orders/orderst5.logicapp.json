@@ -1,0 +1,90 @@
+{
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "$connections": {
+            "defaultValue": {},
+            "type": "Object"
+        }
+    },
+    "triggers": {
+        "When_a_resource_event_occurs": {
+            "splitOn": "@triggerBody()",
+            "type": "ApiConnectionWebhook",
+            "inputs": {
+                "body": {
+                    "properties": {
+                        "destination": {
+                            "endpointType": "webhook",
+                            "properties": {
+                                "endpointUrl": "@{listCallbackUrl()}"
+                            }
+                        },
+                        "topic": "/subscriptions/267ee942-931b-4197-a65c-a232b17acc11/resourcegroups/OpenHackRG/providers/Microsoft.Storage/storageAccounts/oderst51"
+                    }
+                },
+                "host": {
+                    "connection": {
+                        "name": "@parameters('$connections')['azureeventgrid']['connectionId']"
+                    }
+                },
+                "path": "/subscriptions/267ee942-931b-4197-a65c-a232b17acc11/providers/@{encodeURIComponent('Microsoft.Storage.StorageAccounts')}/resource/eventSubscriptions",
+                "queries": {
+                    "x-ms-api-version": "2017-09-15-preview"
+                }
+            }
+        }
+    },
+    "actions": {
+        "Condition": {
+            "actions": {
+                "Compose": {
+                    "runAfter": {},
+                    "type": "Compose",
+                    "inputs": "@triggerBody()?['data']['url']"
+                },
+                "Compose_2": {
+                    "runAfter": {
+                        "Compose": [
+                            "Succeeded"
+                        ]
+                    },
+                    "type": "Compose",
+                    "inputs": "@substring(split(triggerBody()?['subject'], '/')?[6],0,14)"
+                },
+                "ordersSender": {
+                    "runAfter": {
+                        "Compose_2": [
+                            "Succeeded"
+                        ]
+                    },
+                    "type": "SendToBatch",
+                    "inputs": {
+                        "batchName": "orders",
+                        "content": "@outputs('Compose')",
+                        "host": {
+                            "triggerName": "Batch_messages",
+                            "workflow": {
+                                "id": "/subscriptions/267ee942-931b-4197-a65c-a232b17acc11/resourceGroups/OpenHackRG/providers/Microsoft.Logic/workflows/ordersSender"
+                            }
+                        },
+                        "partitionName": "@{outputs('Compose_2')}"
+                    }
+                }
+            },
+            "runAfter": {},
+            "expression": {
+                "and": [
+                    {
+                        "equals": [
+                            "@triggerBody()?['eventType']",
+                            "Microsoft.Storage.BlobCreated"
+                        ]
+                    }
+                ]
+            },
+            "type": "If"
+        }
+    },
+    "outputs": {}
+}

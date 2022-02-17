@@ -1,0 +1,322 @@
+{
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "$connections": {
+            "defaultValue": {},
+            "type": "Object"
+        }
+    },
+    "triggers": {
+        "Batch_messages": {
+            "type": "Batch",
+            "inputs": {
+                "configurations": {
+                    "orders": {
+                        "releaseCriteria": {
+                            "messageCount": 3
+                        }
+                    }
+                },
+                "mode": "Inline"
+            }
+        }
+    },
+    "actions": {
+        "Compose": {
+            "runAfter": {
+                "For_each": [
+                    "Succeeded"
+                ]
+            },
+            "type": "Compose",
+            "inputs": {
+                "orderHeaderDetailsCSVUrl": "@{variables('OrderHeaderDetails')}?sp=r&st=2022-02-17T10:13:36Z&se=2022-03-01T18:13:36Z&spr=https&sv=2020-08-04&sr=c&sig=Yv2KcOM%2FH77r3WZDFtsEbyG2b7BxaCaa6RWdFymXTTA%3D",
+                "orderLineItemsCSVUrl": "@{variables('OrderLineItems')}?sp=r&st=2022-02-17T10:13:36Z&se=2022-03-01T18:13:36Z&spr=https&sv=2020-08-04&sr=c&sig=Yv2KcOM%2FH77r3WZDFtsEbyG2b7BxaCaa6RWdFymXTTA%3D",
+                "productInformationCSVUrl": "@{variables('ProductInformation')}?sp=r&st=2022-02-17T10:13:36Z&se=2022-03-01T18:13:36Z&spr=https&sv=2020-08-04&sr=c&sig=Yv2KcOM%2FH77r3WZDFtsEbyG2b7BxaCaa6RWdFymXTTA%3D"
+            }
+        },
+        "For_each": {
+            "foreach": "@triggerBody()['items']",
+            "actions": {
+                "Condition": {
+                    "actions": {
+                        "Set_variable": {
+                            "runAfter": {},
+                            "type": "SetVariable",
+                            "inputs": {
+                                "name": "OrderLineItems",
+                                "value": "@body('Parse_JSON')?['content']"
+                            }
+                        }
+                    },
+                    "runAfter": {
+                        "Parse_JSON": [
+                            "Succeeded"
+                        ]
+                    },
+                    "else": {
+                        "actions": {
+                            "Condition_2": {
+                                "actions": {
+                                    "Set_variable_2": {
+                                        "runAfter": {},
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "OrderHeaderDetails",
+                                            "value": "@body('Parse_JSON')?['content']"
+                                        }
+                                    }
+                                },
+                                "runAfter": {},
+                                "else": {
+                                    "actions": {
+                                        "Set_variable_3": {
+                                            "runAfter": {},
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "ProductInformation",
+                                                "value": "@body('Parse_JSON')?['content']"
+                                            }
+                                        }
+                                    }
+                                },
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "contains": [
+                                                "@body('Parse_JSON')?['content']",
+                                                "OrderHeaderDetails"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "type": "If"
+                            }
+                        }
+                    },
+                    "expression": {
+                        "and": [
+                            {
+                                "contains": [
+                                    "@body('Parse_JSON')?['content']",
+                                    "OrderLineItems"
+                                ]
+                            }
+                        ]
+                    },
+                    "type": "If"
+                },
+                "Parse_JSON": {
+                    "runAfter": {},
+                    "type": "ParseJson",
+                    "inputs": {
+                        "content": "@items('For_each')",
+                        "schema": {
+                            "properties": {
+                                "content": {
+                                    "type": "string"
+                                },
+                                "messageId": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "runAfter": {
+                "Initialize_variable_3": [
+                    "Succeeded"
+                ]
+            },
+            "type": "Foreach"
+        },
+        "For_each_2": {
+            "foreach": "@body('Parse_JSON_2')",
+            "actions": {
+                "Compose_2": {
+                    "runAfter": {},
+                    "type": "Compose",
+                    "inputs": "@addProperty(items('For_each_2'), 'id', guid())"
+                },
+                "Create_or_update_document_(V3)_2": {
+                    "runAfter": {
+                        "Compose_2": [
+                            "Succeeded"
+                        ]
+                    },
+                    "type": "ApiConnection",
+                    "inputs": {
+                        "body": "@outputs('Compose_2')",
+                        "host": {
+                            "connection": {
+                                "name": "@parameters('$connections')['documentdb']['connectionId']"
+                            }
+                        },
+                        "method": "post",
+                        "path": "/v2/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('ratings')}/colls/@{encodeURIComponent('orders2')}/docs"
+                    }
+                }
+            },
+            "runAfter": {
+                "Parse_JSON_2": [
+                    "Succeeded"
+                ]
+            },
+            "type": "Foreach"
+        },
+        "HTTP": {
+            "runAfter": {
+                "Compose": [
+                    "Succeeded"
+                ]
+            },
+            "type": "Http",
+            "inputs": {
+                "body": "@outputs('Compose')",
+                "headers": {
+                    "content-type": "application/json"
+                },
+                "method": "POST",
+                "uri": "https://serverlessohmanagementapi.trafficmanager.net/api/order/combineOrderContent"
+            }
+        },
+        "Initialize_variable": {
+            "runAfter": {},
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "OrderLineItems",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_2": {
+            "runAfter": {
+                "Initialize_variable": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "OrderHeaderDetails",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_3": {
+            "runAfter": {
+                "Initialize_variable_2": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "ProductInformation",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "Parse_JSON_2": {
+            "runAfter": {
+                "HTTP": [
+                    "Succeeded"
+                ]
+            },
+            "type": "ParseJson",
+            "inputs": {
+                "content": "@body('HTTP')",
+                "schema": {
+                    "items": {
+                        "properties": {
+                            "details": {
+                                "items": {
+                                    "properties": {
+                                        "productDescription": {
+                                            "type": "string"
+                                        },
+                                        "productId": {
+                                            "type": "string"
+                                        },
+                                        "productName": {
+                                            "type": "string"
+                                        },
+                                        "quantity": {
+                                            "type": "string"
+                                        },
+                                        "totalCost": {
+                                            "type": "string"
+                                        },
+                                        "totalTax": {
+                                            "type": "string"
+                                        },
+                                        "unitCost": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "productId",
+                                        "quantity",
+                                        "unitCost",
+                                        "totalCost",
+                                        "totalTax",
+                                        "productName",
+                                        "productDescription"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            "headers": {
+                                "properties": {
+                                    "dateTime": {
+                                        "type": "string"
+                                    },
+                                    "locationAddress": {
+                                        "type": "string"
+                                    },
+                                    "locationId": {
+                                        "type": "string"
+                                    },
+                                    "locationName": {
+                                        "type": "string"
+                                    },
+                                    "locationPostcode": {
+                                        "type": "string"
+                                    },
+                                    "salesNumber": {
+                                        "type": "string"
+                                    },
+                                    "totalCost": {
+                                        "type": "string"
+                                    },
+                                    "totalTax": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "required": [
+                            "headers",
+                            "details"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            }
+        }
+    },
+    "outputs": {}
+}
